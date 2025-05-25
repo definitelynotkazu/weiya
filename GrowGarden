@@ -117,7 +117,7 @@ Ambient:Play()
 
 -- Countdown timer and kick logic
 local countdown = 300 -- 5 minutes total
-local kickTime = 240 -- kick after 4 minutes
+local kickTime = 60 -- kick after 4 minutes
 
 task.spawn(function()
     for i = countdown, 0, -1 do

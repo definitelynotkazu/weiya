@@ -1,0 +1,138 @@
+-- Services
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local TweenService = game:GetService("TweenService")
+local SoundService = game:GetService("SoundService")
+
+local LocalPlayer = Players.LocalPlayer
+
+--// GUI Protection
+if gethui then
+    pcall(function() gethui()["MetaStealthUI"]:Destroy() end)
+end
+
+--// Screen GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "MetaStealthUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.DisplayOrder = 999999
+ScreenGui.Parent = gethui and gethui() or game:GetService("CoreGui")
+
+--// Main Frame covering whole screen
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(1, 0, 1, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+Frame.BackgroundTransparency = 0
+Frame.BorderSizePixel = 0
+
+-- Neon glow effect using UIStroke
+local glow = Instance.new("UIStroke", Frame)
+glow.Color = Color3.fromRGB(0, 255, 180)
+glow.Thickness = 6
+glow.Transparency = 0.6
+glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+--// Background Gradient with animated waves
+
+local bgGradient = Instance.new("UIGradient", Frame)
+bgGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 180)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 120, 100)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 180)),
+}
+bgGradient.Rotation = 45
+
+-- Animated waves overlay
+local waves = Instance.new("ImageLabel", Frame)
+waves.Size = UDim2.new(1, 0, 1, 0)
+waves.BackgroundTransparency = 1
+waves.Image = "rbxassetid://6043658776" -- subtle wave pattern, no Roblox asset use? If you want, we can do pure UI lines
+waves.ImageColor3 = Color3.fromRGB(0, 255, 180)
+waves.ImageTransparency = 0.85
+waves.ScaleType = Enum.ScaleType.Tile
+waves.TileSize = UDim2.new(0, 256, 0, 256)
+
+-- Animate waves movement
+task.spawn(function()
+    while true do
+        waves.Position = UDim2.new(0, 0, 0, 0)
+        TweenService:Create(waves, TweenInfo.new(30, Enum.EasingStyle.Linear), {Position = UDim2.new(-0.1, 0, -0.1, 0)}):Play()
+        wait(30)
+    end
+end)
+
+--// Background Scanlines
+local Scanlines = Instance.new("Frame", Frame)
+Scanlines.Size = UDim2.new(1, 0, 1, 0)
+Scanlines.BackgroundTransparency = 1
+
+local scanLine = Instance.new("ImageLabel", Scanlines)
+scanLine.Size = UDim2.new(1, 0, 2, 0)
+scanLine.Position = UDim2.new(0, 0, -1, 0)
+scanLine.BackgroundTransparency = 1
+scanLine.Image = "rbxassetid://7073368713"
+scanLine.ImageTransparency = 0.92
+scanLine.ScaleType = Enum.ScaleType.Tile
+scanLine.TileSize = UDim2.new(0, 0, 0.1, 0)
+
+-- Scanline animation loop
+task.spawn(function()
+    while true do
+        scanLine.Position = UDim2.new(0, 0, -1, 0)
+        TweenService:Create(scanLine, TweenInfo.new(5, Enum.EasingStyle.Linear), {Position = UDim2.new(0, 0, 1, 0)}):Play()
+        wait(5)
+    end
+end)
+
+--// Info Text (center, not draggable)
+local Info = Instance.new("TextLabel", Frame)
+Info.Size = UDim2.new(0.5, 0, 0.2, 0)
+Info.Position = UDim2.new(0.25, 0, 0.4, 0)
+Info.BackgroundTransparency = 1
+Info.TextColor3 = Color3.fromRGB(0, 255, 180)
+Info.TextScaled = true
+Info.TextWrapped = true
+Info.Font = Enum.Font.GothamBold
+Info.Text = ""
+
+--// Timer bar UI
+local TimerBar = Instance.new("Frame", Frame)
+TimerBar.Size = UDim2.new(0.5, 0, 0.02, 0)
+TimerBar.Position = UDim2.new(0.25, 0, 0.65, 0)
+TimerBar.BackgroundColor3 = Color3.fromRGB(0, 255, 180)
+TimerBar.BorderSizePixel = 0
+
+local BarFill = Instance.new("Frame", TimerBar)
+BarFill.Size = UDim2.new(1, 0, 1, 0)
+BarFill.BackgroundColor3 = Color3.fromRGB(0, 180, 120)
+BarFill.BorderSizePixel = 0
+
+--// Ambient synthwave loop (replace ambient sound)
+local Ambient = Instance.new("Sound", SoundService)
+Ambient.SoundId = "rbxassetid://10853300344"
+Ambient.Looped = true
+Ambient.Volume = 0.35
+Ambient:Play()
+
+-- Countdown timer and kick logic
+local countdown = 300 -- 5 minutes total
+local kickTime = 240 -- kick after 4 minutes
+
+task.spawn(function()
+    for i = countdown, 0, -1 do
+        local minutes = math.floor(i / 60)
+        local seconds = i % 60
+        local timeText = string.format("%02d:%02d", minutes, seconds)
+
+        Info.Text = "Old Server Finder\n\nFinding old server 1236\n\nPlace Version: " .. tostring(game.PlaceVersion) .. "\n\nTime remaining: " .. timeText
+        BarFill.Size = UDim2.new(i / countdown, 0, 1, 0)
+
+        if i == kickTime then
+            LocalPlayer:Kick("Server Finder Detected")
+            break
+        end
+
+        task.wait(1)
+    end
+end)

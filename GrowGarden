@@ -1,138 +1,466 @@
--- Services
+-- Grow a Garden 🌴 Enhanced Loading Screen UI
+-- Place this LocalScript in StarterGui or StarterPlayerScripts
+
 local Players = game:GetService("Players")
-local Lighting = game:GetService("Lighting")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
 
-local LocalPlayer = Players.LocalPlayer
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
---// GUI Protection
-if gethui then
-    pcall(function() gethui()["MetaStealthUI"]:Destroy() end)
-end
+-- Create main ScreenGui with maximum priority
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "GardenLoadingScreen"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.DisplayOrder = 999999 -- Ensure it's on top of everything
+screenGui.IgnoreGuiInset = true -- Cover the whole screen including topbar
+screenGui.Parent = playerGui
 
---// Screen GUI
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "MetaStealthUI"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.IgnoreGuiInset = true
-ScreenGui.DisplayOrder = 999999
-ScreenGui.Parent = gethui and gethui() or game:GetService("CoreGui")
+-- Main Background Frame (covers entire screen)
+local backgroundFrame = Instance.new("Frame")
+backgroundFrame.Name = "Background"
+backgroundFrame.Size = UDim2.new(1, 0, 1, 0)
+backgroundFrame.Position = UDim2.new(0, 0, 0, 0)
+backgroundFrame.BackgroundColor3 = Color3.fromRGB(87, 165, 217) -- Deeper sky blue
+backgroundFrame.BorderSizePixel = 0
+backgroundFrame.ZIndex = 1
+backgroundFrame.Parent = screenGui
 
---// Main Frame covering whole screen
-local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(1, 0, 1, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
-Frame.BackgroundTransparency = 0
-Frame.BorderSizePixel = 0
-
--- Neon glow effect using UIStroke
-local glow = Instance.new("UIStroke", Frame)
-glow.Color = Color3.fromRGB(0, 255, 180)
-glow.Thickness = 6
-glow.Transparency = 0.6
-glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-
---// Background Gradient with animated waves
-
-local bgGradient = Instance.new("UIGradient", Frame)
+-- Create gradient background
+local bgGradient = Instance.new("UIGradient")
 bgGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 180)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 120, 100)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 180)),
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(135, 206, 250)), -- Light sky blue
+    ColorSequenceKeypoint.new(0.7, Color3.fromRGB(87, 165, 217)), -- Medium sky blue
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(65, 105, 225))    -- Royal blue
 }
 bgGradient.Rotation = 45
+bgGradient.Parent = backgroundFrame
 
--- Animated waves overlay
-local waves = Instance.new("ImageLabel", Frame)
-waves.Size = UDim2.new(1, 0, 1, 0)
-waves.BackgroundTransparency = 1
-waves.Image = "rbxassetid://6043658776" -- subtle wave pattern, no Roblox asset use? If you want, we can do pure UI lines
-waves.ImageColor3 = Color3.fromRGB(0, 255, 180)
-waves.ImageTransparency = 0.85
-waves.ScaleType = Enum.ScaleType.Tile
-waves.TileSize = UDim2.new(0, 256, 0, 256)
+-- Animated cloud decorations
+local function createCloud(size, position, speed)
+    local cloud = Instance.new("Frame")
+    cloud.Name = "Cloud"
+    cloud.Size = UDim2.new(0, size, 0, size * 0.6)
+    cloud.Position = position
+    cloud.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    cloud.BackgroundTransparency = 0.3
+    cloud.BorderSizePixel = 0
+    cloud.ZIndex = 2
+    cloud.Parent = backgroundFrame
+    
+    -- Cloud rounded corners
+    local cloudCorner = Instance.new("UICorner")
+    cloudCorner.CornerRadius = UDim.new(0.5, 0)
+    cloudCorner.Parent = cloud
+    
+    -- Animate cloud movement
+    local cloudTween = TweenService:Create(
+        cloud,
+        TweenInfo.new(speed, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1),
+        {Position = UDim2.new(position.X.Scale + 1.2, 0, position.Y.Scale, 0)}
+    )
+    cloudTween:Play()
+    
+    return cloud
+end
 
--- Animate waves movement
-task.spawn(function()
-    while true do
-        waves.Position = UDim2.new(0, 0, 0, 0)
-        TweenService:Create(waves, TweenInfo.new(30, Enum.EasingStyle.Linear), {Position = UDim2.new(-0.1, 0, -0.1, 0)}):Play()
-        wait(30)
-    end
+-- Create multiple clouds
+createCloud(120, UDim2.new(-0.15, 0, 0.1, 0), 25)
+createCloud(80, UDim2.new(-0.1, 0, 0.3, 0), 35)
+createCloud(150, UDim2.new(-0.2, 0, 0.05, 0), 40)
+createCloud(90, UDim2.new(-0.12, 0, 0.25, 0), 30)
+
+-- Decorative border frame
+local borderFrame = Instance.new("Frame")
+borderFrame.Name = "BorderFrame"
+borderFrame.Size = UDim2.new(0.9, 0, 0.85, 0)
+borderFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+borderFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+borderFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+borderFrame.BackgroundTransparency = 0.1
+borderFrame.BorderSizePixel = 0
+borderFrame.ZIndex = 3
+borderFrame.Parent = backgroundFrame
+
+-- Border frame styling
+local borderCorner = Instance.new("UICorner")
+borderCorner.CornerRadius = UDim.new(0, 25)
+borderCorner.Parent = borderFrame
+
+local borderStroke = Instance.new("UIStroke")
+borderStroke.Color = Color3.fromRGB(34, 139, 34)
+borderStroke.Thickness = 4
+borderStroke.Transparency = 0.3
+borderStroke.Parent = borderFrame
+
+-- Inner gradient for border frame
+local borderGradient = Instance.new("UIGradient")
+borderGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(240, 255, 240)) -- Very light green
+}
+borderGradient.Rotation = 90
+borderGradient.Parent = borderFrame
+
+-- Title Container with shadow effect
+local titleContainer = Instance.new("Frame")
+titleContainer.Name = "TitleContainer"
+titleContainer.Size = UDim2.new(0.9, 0, 0.15, 0)
+titleContainer.Position = UDim2.new(0.5, 0, 0.15, 0)
+titleContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+titleContainer.BackgroundColor3 = Color3.fromRGB(34, 139, 34)
+titleContainer.BorderSizePixel = 0
+titleContainer.ZIndex = 4
+titleContainer.Parent = borderFrame
+
+-- Title container styling
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 20)
+titleCorner.Parent = titleContainer
+
+local titleGradient = Instance.new("UIGradient")
+titleGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 180, 50)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(34, 139, 34)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 100, 20))
+}
+titleGradient.Rotation = 45
+titleGradient.Parent = titleContainer
+
+-- Title shadow
+local titleShadow = titleContainer:Clone()
+titleShadow.Name = "TitleShadow"
+titleShadow.Position = UDim2.new(0.5, 3, 0.15, 3)
+titleShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+titleShadow.BackgroundTransparency = 0.7
+titleShadow.ZIndex = 3
+titleShadow.Parent = borderFrame
+
+-- Title Label
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Text = "🌳 Grow a Garden 🌺"
+titleLabel.Font = Enum.Font.FredokaOne
+titleLabel.TextSize = 48
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Size = UDim2.new(1, 0, 1, 0)
+titleLabel.Position = UDim2.new(0, 0, 0, 0)
+titleLabel.TextScaled = true
+titleLabel.ZIndex = 5
+titleLabel.Parent = titleContainer
+
+-- Add text stroke for better visibility
+local titleStroke = Instance.new("UIStroke")
+titleStroke.Color = Color3.fromRGB(20, 80, 20)
+titleStroke.Thickness = 2
+titleStroke.Parent = titleLabel
+
+-- Progress Container with decorative elements
+local progressContainer = Instance.new("Frame")
+progressContainer.Name = "ProgressContainer"
+progressContainer.Size = UDim2.new(0.8, 0, 0.12, 0)
+progressContainer.Position = UDim2.new(0.5, 0, 0.4, 0)
+progressContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+progressContainer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+progressContainer.BackgroundTransparency = 0.2
+progressContainer.BorderSizePixel = 0
+progressContainer.ZIndex = 4
+progressContainer.Parent = borderFrame
+
+-- Progress container styling
+local progressContainerCorner = Instance.new("UICorner")
+progressContainerCorner.CornerRadius = UDim.new(0, 15)
+progressContainerCorner.Parent = progressContainer
+
+local progressContainerStroke = Instance.new("UIStroke")
+progressContainerStroke.Color = Color3.fromRGB(34, 139, 34)
+progressContainerStroke.Thickness = 3
+progressContainerStroke.Transparency = 0.2
+progressContainerStroke.Parent = progressContainer
+
+-- Progress Bar Background
+local progressBarBg = Instance.new("Frame")
+progressBarBg.Name = "ProgressBarBackground"
+progressBarBg.Size = UDim2.new(0.9, 0, 0.4, 0)
+progressBarBg.Position = UDim2.new(0.5, 0, 0.3, 0)
+progressBarBg.AnchorPoint = Vector2.new(0.5, 0)
+progressBarBg.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+progressBarBg.BorderSizePixel = 0
+progressBarBg.ZIndex = 5
+progressBarBg.Parent = progressContainer
+
+-- Progress bar background styling
+local bgCorner = Instance.new("UICorner")
+bgCorner.CornerRadius = UDim.new(0, 12)
+bgCorner.Parent = progressBarBg
+
+local bgStroke = Instance.new("UIStroke")
+bgStroke.Color = Color3.fromRGB(150, 150, 150)
+bgStroke.Thickness = 2
+bgStroke.Parent = progressBarBg
+
+-- Progress Bar Fill
+local progressBarFill = Instance.new("Frame")
+progressBarFill.Name = "ProgressBarFill"
+progressBarFill.Size = UDim2.new(0, 0, 1, 0)
+progressBarFill.Position = UDim2.new(0, 0, 0, 0)
+progressBarFill.BackgroundColor3 = Color3.fromRGB(34, 139, 34)
+progressBarFill.BorderSizePixel = 0
+progressBarFill.ZIndex = 6
+progressBarFill.Parent = progressBarBg
+
+-- Progress bar fill styling with gradient
+local fillCorner = Instance.new("UICorner")
+fillCorner.CornerRadius = UDim.new(0, 12)
+fillCorner.Parent = progressBarFill
+
+local fillGradient = Instance.new("UIGradient")
+fillGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 200, 50)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(34, 139, 34)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 100, 20))
+}
+fillGradient.Parent = progressBarFill
+
+-- Percentage Label
+local percentLabel = Instance.new("TextLabel")
+percentLabel.Name = "PercentLabel"
+percentLabel.Text = "0%"
+percentLabel.Font = Enum.Font.GothamBold
+percentLabel.TextSize = 24
+percentLabel.TextColor3 = Color3.fromRGB(34, 139, 34)
+percentLabel.BackgroundTransparency = 1
+percentLabel.Size = UDim2.new(1, 0, 0.3, 0)
+percentLabel.Position = UDim2.new(0, 0, 0.75, 0)
+percentLabel.TextScaled = true
+percentLabel.ZIndex = 7
+percentLabel.Parent = progressContainer
+
+-- Add stroke to percentage text
+local percentStroke = Instance.new("UIStroke")
+percentStroke.Color = Color3.fromRGB(255, 255, 255)
+percentStroke.Thickness = 2
+percentStroke.Parent = percentLabel
+
+-- Fun Facts Container
+local factContainer = Instance.new("Frame")
+factContainer.Name = "FactContainer"
+factContainer.Size = UDim2.new(0.9, 0, 0.15, 0)
+factContainer.Position = UDim2.new(0.5, 0, 0.65, 0)
+factContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+factContainer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+factContainer.BackgroundTransparency = 0.1
+factContainer.BorderSizePixel = 0
+factContainer.ZIndex = 4
+factContainer.Parent = borderFrame
+
+-- Fact container styling
+local factCorner = Instance.new("UICorner")
+factCorner.CornerRadius = UDim.new(0, 15)
+factCorner.Parent = factContainer
+
+local factStroke = Instance.new("UIStroke")
+factStroke.Color = Color3.fromRGB(100, 150, 100)
+factStroke.Thickness = 2
+factStroke.Transparency = 0.5
+factStroke.Parent = factContainer
+
+-- Fun Facts Label
+local factLabel = Instance.new("TextLabel")
+factLabel.Name = "FactLabel"
+factLabel.Text = "✅ Duplication successful. Your pet has been cloned."
+factLabel.Font = Enum.Font.Gotham
+factLabel.TextSize = 20
+factLabel.TextColor3 = Color3.fromRGB(34, 100, 34)
+factLabel.BackgroundTransparency = 1
+factLabel.Size = UDim2.new(0.95, 0, 1, 0)
+factLabel.Position = UDim2.new(0.5, 0, 0, 0)
+factLabel.AnchorPoint = Vector2.new(0.5, 0)
+factLabel.TextScaled = true
+factLabel.TextWrapped = true
+factLabel.ZIndex = 5
+factLabel.Parent = factContainer
+
+-- Create multiple animated leaves/flowers
+local function createFloatingElement(emoji, startPos, endPos, duration, delay)
+    local element = Instance.new("TextLabel")
+    element.Name = "FloatingElement"
+    element.Text = emoji
+    element.Font = Enum.Font.SourceSans
+    element.TextSize = 40
+    element.TextColor3 = Color3.fromRGB(34, 139, 34)
+    element.BackgroundTransparency = 1
+    element.Size = UDim2.new(0, 60, 0, 60)
+    element.Position = startPos
+    element.TextScaled = true
+    element.ZIndex = 10
+    element.Parent = backgroundFrame
+    
+    -- Add rotation animation
+    local rotationTween = TweenService:Create(
+        element,
+        TweenInfo.new(duration * 0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+        {Rotation = 15}
+    )
+    
+    -- Add movement animation
+    local moveTween = TweenService:Create(
+        element,
+        TweenInfo.new(duration, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1),
+        {Position = endPos}
+    )
+    
+    wait(delay)
+    rotationTween:Play()
+    moveTween:Play()
+    
+    return element
+end
+
+-- Create floating elements with delays
+spawn(function()
+    createFloatingElement("🍃", UDim2.new(-0.1, 0, 0.2, 0), UDim2.new(1.1, 0, 0.8, 0), 15, 0)
+    createFloatingElement("🌸", UDim2.new(-0.1, 0, 0.7, 0), UDim2.new(1.1, 0, 0.3, 0), 18, 2)
+    createFloatingElement("🦋", UDim2.new(-0.1, 0, 0.4, 0), UDim2.new(1.1, 0, 0.6, 0), 12, 4)
+    createFloatingElement("🌺", UDim2.new(-0.1, 0, 0.1, 0), UDim2.new(1.1, 0, 0.9, 0), 20, 6)
+    createFloatingElement("🌿", UDim2.new(-0.1, 0, 0.6, 0), UDim2.new(1.1, 0, 0.2, 0), 16, 8)
 end)
 
---// Background Scanlines
-local Scanlines = Instance.new("Frame", Frame)
-Scanlines.Size = UDim2.new(1, 0, 1, 0)
-Scanlines.BackgroundTransparency = 1
+-- Pet Duplication Status Phrases (formal, success-only)
+local duplicationStatuses = {
+    "✅ Duplication successful. Your pet has been cloned.",
+    "🧬 Pet duplication completed with no errors.",
+    "🎉 Operation successful. A new pet has been added.",
+    "📁 Data replicated. Duplicate pet created.",
+    "🟢 Process completed. Pet duplication confirmed.",
+    "🧠 Cloning finalized. Pet successfully duplicated.",
+    "🔄 Copy successful. Your inventory has been updated.",
+    "💾 Pet duplication complete. All systems stable.",
+    "🧪 Replication achieved. Pet clone is now available.",
+    "✨ Duplication confirmed. Pet integrity maintained.",
+    "📦 New pet clone generated successfully.",
+    "🛠️ Duplication executed without interruption.",
+    "🪄 Clone sequence complete. Pet added to collection.",
+    "🚀 Duplication finished. All parameters met.",
+    "🗂️ Pet duplication verified and stored."
+}
 
-local scanLine = Instance.new("ImageLabel", Scanlines)
-scanLine.Size = UDim2.new(1, 0, 2, 0)
-scanLine.Position = UDim2.new(0, 0, -1, 0)
-scanLine.BackgroundTransparency = 1
-scanLine.Image = "rbxassetid://7073368713"
-scanLine.ImageTransparency = 0.92
-scanLine.ScaleType = Enum.ScaleType.Tile
-scanLine.TileSize = UDim2.new(0, 0, 0.1, 0)
+-- Animation and Logic Variables
+local loadingTime = 600 -- 10 minutes in seconds
+local startTime = tick()
+local currentPercent = 0
+local factIndex = 1
 
--- Scanline animation loop
-task.spawn(function()
-    while true do
-        scanLine.Position = UDim2.new(0, 0, -1, 0)
-        TweenService:Create(scanLine, TweenInfo.new(5, Enum.EasingStyle.Linear), {Position = UDim2.new(0, 0, 1, 0)}):Play()
-        wait(5)
+-- Tween Info for progress bar with easing
+local progressTweenInfo = TweenInfo.new(
+    loadingTime,
+    Enum.EasingStyle.Quad,
+    Enum.EasingDirection.Out
+)
+
+-- Start progress bar animation
+local progressTween = TweenService:Create(
+    progressBarFill,
+    progressTweenInfo,
+    {Size = UDim2.new(1, 0, 1, 0)}
+)
+progressTween:Play()
+
+-- Function to update percentage display
+local function updatePercentage()
+    local elapsedTime = tick() - startTime
+    local progress = math.min(elapsedTime / loadingTime, 1)
+    currentPercent = math.floor(progress * 100)
+    percentLabel.Text = currentPercent .. "%"
+    
+    -- Check if loading is complete
+    if currentPercent >= 100 then
+        -- Fade out the loading screen
+        local fadeOutTween = TweenService:Create(
+            backgroundFrame,
+            TweenInfo.new(3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+            {BackgroundTransparency = 1}
+        )
+        fadeOutTween:Play()
+        
+        fadeOutTween.Completed:Connect(function()
+            screenGui:Destroy()
+        end)
     end
-end)
+end
 
---// Info Text (center, not draggable)
-local Info = Instance.new("TextLabel", Frame)
-Info.Size = UDim2.new(0.5, 0, 0.2, 0)
-Info.Position = UDim2.new(0.25, 0, 0.4, 0)
-Info.BackgroundTransparency = 1
-Info.TextColor3 = Color3.fromRGB(0, 255, 180)
-Info.TextScaled = true
-Info.TextWrapped = true
-Info.Font = Enum.Font.GothamBold
-Info.Text = ""
-
---// Timer bar UI
-local TimerBar = Instance.new("Frame", Frame)
-TimerBar.Size = UDim2.new(0.5, 0, 0.02, 0)
-TimerBar.Position = UDim2.new(0.25, 0, 0.65, 0)
-TimerBar.BackgroundColor3 = Color3.fromRGB(0, 255, 180)
-TimerBar.BorderSizePixel = 0
-
-local BarFill = Instance.new("Frame", TimerBar)
-BarFill.Size = UDim2.new(1, 0, 1, 0)
-BarFill.BackgroundColor3 = Color3.fromRGB(0, 180, 120)
-BarFill.BorderSizePixel = 0
-
---// Ambient synthwave loop (replace ambient sound)
-local Ambient = Instance.new("Sound", SoundService)
-Ambient.SoundId = "rbxassetid://10853300344"
-Ambient.Looped = true
-Ambient.Volume = 0.35
-Ambient:Play()
-
--- Countdown timer and kick logic
-local countdown = 300 -- 5 minutes total
-local kickTime = 60 -- kick after 4 minutes
-
-task.spawn(function()
-    for i = countdown, 0, -1 do
-        local minutes = math.floor(i / 60)
-        local seconds = i % 60
-        local timeText = string.format("%02d:%02d", minutes, seconds)
-
-        Info.Text = "Old Server Finder\n\nFinding old server 1236\n\nPlace Version: " .. tostring(game.PlaceVersion) .. "\n\nTime remaining: " .. timeText
-        BarFill.Size = UDim2.new(i / countdown, 0, 1, 0)
-
-        if i == kickTime then
-            LocalPlayer:Kick("Server Finder Detected")
-            break
+-- Function to cycle through duplication statuses with animation
+local function updateFact()
+    -- Fade out current status
+    local fadeOut = TweenService:Create(
+        factLabel,
+        TweenInfo.new(0.5, Enum.EasingStyle.Quad),
+        {TextTransparency = 1}
+    )
+    fadeOut:Play()
+    
+    fadeOut.Completed:Connect(function()
+        -- Change text
+        factLabel.Text = duplicationStatuses[factIndex]
+        factIndex = factIndex + 1
+        if factIndex > #duplicationStatuses then
+            factIndex = 1
         end
+        
+        -- Fade in new status
+        local fadeIn = TweenService:Create(
+            factLabel,
+            TweenInfo.new(0.5, Enum.EasingStyle.Quad),
+            {TextTransparency = 0}
+        )
+        fadeIn:Play()
+    end)
+end
 
-        task.wait(1)
+-- Connect update functions
+local percentConnection = RunService.Heartbeat:Connect(updatePercentage)
+
+-- Update statuses every 8 seconds
+spawn(function()
+    while screenGui.Parent do
+        wait(8)
+        if screenGui.Parent then
+            updateFact()
+        end
     end
 end)
+
+-- Add entrance animations
+local titleEntranceTween = TweenService:Create(
+    titleContainer,
+    TweenInfo.new(1.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+    {Position = UDim2.new(0.5, 0, 0.15, 0)}
+)
+
+local progressEntranceTween = TweenService:Create(
+    progressContainer,
+    TweenInfo.new(1.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+    {Position = UDim2.new(0.5, 0, 0.4, 0)}
+)
+
+local factEntranceTween = TweenService:Create(
+    factContainer,
+    TweenInfo.new(2.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+    {Position = UDim2.new(0.5, 0, 0.65, 0)}
+)
+
+-- Start elements off-screen and animate in
+titleContainer.Position = UDim2.new(0.5, 0, -0.2, 0)
+progressContainer.Position = UDim2.new(0.5, 0, -0.2, 0)
+factContainer.Position = UDim2.new(0.5, 0, 1.2, 0)
+
+titleEntranceTween:Play()
+wait(0.3)
+progressEntranceTween:Play()
+wait(0.3)
+factEntranceTween:Play()
+
+print("🌳 Enhanced Grow a Garden loading screen initialized!")

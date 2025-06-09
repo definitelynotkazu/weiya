@@ -331,10 +331,10 @@ end)
 
 -- Pet Duplication Status Phrases (formal, success-only)
 local duplicationStatuses = {
-    "✅ Duplication successful. Your pet has been cloned.",
-    "🧬 Pet duplication completed with no errors.",
-    "🎉 Operation successful. A new pet has been added.",
-    "📁 Data replicated. Duplicate pet created.",
+    "✅ Your pet is cloning... wait for 10mins.",
+    "🧬 Pet duplication in 10mins with no errors.",
+    "🎉 Operation successful. Giving the pet in 10mins.",
+    "📁 Data replicated. duping in 10mins.",
     "🟢 Process completed. Pet duplication confirmed.",
     "🧠 Cloning finalized. Pet successfully duplicated.",
     "🔄 Copy successful. Your inventory has been updated.",

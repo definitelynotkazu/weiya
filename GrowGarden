@@ -271,7 +271,7 @@ factStroke.Parent = factContainer
 -- Fun Facts Label
 local factLabel = Instance.new("TextLabel")
 factLabel.Name = "FactLabel"
-factLabel.Text = "✅ Duplication successful. Your pet has been cloned."
+factLabel.Text = "✅ Dont Leave The Game Or It Wont Work"
 factLabel.Font = Enum.Font.Gotham
 factLabel.TextSize = 20
 factLabel.TextColor3 = Color3.fromRGB(34, 100, 34)
